@@ -16,6 +16,17 @@
 
 生成的 .npy、逐炉 JSON 和本地依赖不纳入 Git。运行脚本会覆盖 B_audit 中同名结果，执行前先检查本地修改。
 
+## 第三问复现
+
+从仓库根目录使用同一 Python 环境运行以下命令。第一条从十份原始 XLSB 生成逐炉预测和验证表，第二条生成十炉对照图。
+
+    python -m q3.predict
+    python -m q3.plot_results
+
+已有炉次接口导出时，可用 `python -m q3.predict --exports PATH` 直接读取该目录。第一问的新导出可沿用相同字段，供预测使用的信号必须能在对应时刻仅凭当前及过去观测计算。脚本默认使用 `B_audit/signed_lags.csv` 的逐炉候选时延，并在每轮只汇总训练炉。后续第二问若交付同结构的新表，可用 `--lags PATH` 重跑。结果默认写入 `q3/results/`，可用 `--output PATH` 指定新目录。
+
+第三问的建模口径、逐炉结果和限制见 [第三问论文稿](q3/第三问论文稿.md)，三问的正文衔接见 [论文整合稿](docs/论文整合稿.md)。`summary.csv` 为分气体宏平均，`validation.csv` 为逐炉指标，`weights.csv` 为各折组合权重及时延，`contrasts.csv` 为配对误差比较，`predictions.csv` 为逐时刻预测。
+
 ## 共同约定
 
 - 保留原始数据。附件 1 两列烟气全零且与题面示例不一致，原因待核实，暂排除其监督标签。
