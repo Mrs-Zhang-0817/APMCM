@@ -36,7 +36,7 @@ The screen repaired 47 points across the ten heats. Figure 1 shows why local str
 
 ![Examples of an isolated impulse and a retained peak](../q1_q2/results/spectral_windows.png)
 
-*Figure 1. Local spectral intensity before and after screening in heat 6B03205. Each pair uses common coordinates and a common colour scale.*
+*Figure 1. Local spectral intensity in heat 6B03205 before and after offline screening and repair. The circles mark the isolated observation at 551.5 s and 764.966 nm (top) and the retained peak at 732.0 s and 588.751 nm (bottom). Each row uses identical time and wavelength coordinates and a shared intensity scale in W/cm². Full surfaces are in Appendix 6.2.*
 
 Between consecutive time and wavelength nodes, the reconstructed intensity is the weighted sum of four corner values with weights (1−a)(1−b), (1−a)b, a(1−b) and ab. Here a and b are the fractional positions along time and wavelength. Each surface retains all native nodes; a 121 by 181 display grid keeps the ten figures comparable. Peak heights should be read on the native grid.
 
@@ -50,9 +50,9 @@ We anchored a monotone piecewise cubic Hermite curve to cumulative oxygen readin
 
 We joined successive gas observations linearly and accumulated their trapezoidal areas from zero at the first observation. In 6B03270 the correlations of cumulative oxygen with instantaneous CO₂ and CO were −0.020 and 0.930, respectively. With cumulative CO₂ and CO volumes they were 0.993 and 0.967. Shared growth over time contributes to the latter correlations, limiting their use as evidence of reaction efficiency.
 
-![Six reconstructed process signals for heat 6C02057](../q1_q2/results/process/6C02057.png)
+![Measured and reconstructed oxygen supply near the largest cumulative-volume deviation in heat 6C02057](../q1_q2/results/oxygen_window.png)
 
-*Figure 2. Reconstructed oxygen supply, gas measurements and cumulative gas volumes for the shortest heat. The appendix provides the same six signals for every heat.*
+*Figure 2. Oxygen-supply reconstruction in heat 6C02057 near 376 s. The upper panel compares recorded and reconstructed cumulative oxygen volume (m³). The lower panel compares raw interval differences and the derivative of the fitted curve (m³/s). Both panels use the same time window. The ten full six-panel figures are in Appendix 6.3.*
 
 For candidate delay estimation we compared 5 s changes in smoothed flow with later gas changes, scanning 0–40 s in 0.5 s steps and maximizing the absolute Pearson correlation. We grouped observations using source-time flow terciles and examined process halves and alternative smoothing windows. With the original trailing flow estimate, the high-flow CO₂ delay was shorter in seven heats and longer in two. For CO it was shorter in three, tied in one and longer in five. Repeating the scan using the reconstructed flow moved 80 of 90 candidate peaks. High-flow delays then became shorter in eight heats for CO₂ and one for CO. The direction of the association depends on the gas, and the inferred number of seconds depends strongly on signal processing.
 
@@ -74,11 +74,11 @@ Table 1 uses common target times starting at 10 s for both concurrent and advanc
 
 Spectral history lowered 10 s ahead CO error by 1.14 m³/s. CO₂ exhibited a small increase. The joint ensemble struggled on the short heat 6C02057, with CO₂ MAE of 8.99 m³/s. This heat remains in the reported average.
 
-![Observed and predicted analyzer measurements by heat](../q3/results/predictions_10s.png)
-
-*Figure 3. Analyzer readings and 10 s ahead forecasts across heats. The all-zero record for 6B03205 is ineligible for quantitative validation.*
-
 A separate paired experiment scored 11,570 heat–time combinations from 30 s onward to allow history features to warm up. Holding the regression penalty, training weights and targets fixed, adding spectral features raised process-history MAE from 4.935 to 5.408 m³/s for CO and from 2.685 to 3.053 m³/s for CO₂. Interpolating interior clipped channels using their neighbours within the same frame changed every heat-level gas MAE by less than 0.0003 m³/s.
+
+![Two paired comparisons of heat-averaged MAE for 10 s ahead CO₂ and CO forecasts](figures/forecast_comparisons.png)
+
+*Figure 3. Two comparisons of 10 s ahead forecasts across nine scored heats. Panel (a) compares current spectra with spectral history at common targets from 10 s. Panel (b) compares process history with and without spectra at common targets from 30 s. Each connector joins two models evaluated on the same targets for that gas. Vertical scales differ between panels. Table A3 reports heat-level differences, and Figure A21 shows the full joint-ensemble forecasts.*
 
 For the delay test, only candidate offsets supported by at least two training heats were eligible. When an estimated offset exceeded the 10 s forecast horizon, we added the spectral change between forecast issuance and the earlier candidate source time. CO never satisfied the support rule. CO₂ triggered the adjustment in seven folds, all based on the same two supporting heats. Its macro MAE rose from 3.053 to 3.101 m³/s. The delay rule therefore yielded no average gain under this evaluation.
 
@@ -87,6 +87,8 @@ For the delay test, only candidate offsets supported by at least two training he
 A short spectral history helped forecast CO in an unseen heat when the furnace-mouth spectrum was the only input. The same benefit did not extend to CO₂. When oxygen-supply records were available, process history gave lower average errors and the tested spectral features added no average benefit. These findings concern the delayed analyzer readings of nine evaluable heats. Broader claims about new plants, clipped peak heights or the composition inside the bath require observations beyond this dataset.
 
 ## 6. Appendix: heat-level results and figures
+
+### 6.1 Heat-level tables
 
 Table A1 links each native-grid reconstruction and six-panel process figure to its heat-specific holdout errors. Intensities follow the units stated in the problem.
 
@@ -103,7 +105,9 @@ Table A1 links each native-grid reconstruction and six-panel process figure to i
 | 6C02107 | 1000 | 116.96 | 176.16 | [Surface](../q1_q2/results/spectra/6C02107.png) | [Six signals](../q1_q2/results/process/6C02107.png) |
 | 6C02108 | 1000 | 122.45 | 181.41 | [Surface](../q1_q2/results/spectra/6C02108.png) | [Six signals](../q1_q2/results/process/6C02108.png) |
 
-Table A2 gives candidate delays (seconds) for the low and high flow groups using the reconstructed flow. Positive offsets place the analyzer response later than its source. A peak at 40 s reaches the search boundary.
+*Table A1. Heat-level spectral interpolation errors at 1,000 withheld interior observations per heat.*
+
+Table A2 gives candidate delays (seconds) for the low and high flow groups using the reconstructed flow. Positive offsets place the analyzer response later than its source. Peaks at 0 and 40 s reach the scan boundaries.
 
 | Heat | CO₂ low | CO₂ high | CO low | CO high |
 |---|---:|---:|---:|---:|
@@ -116,3 +120,131 @@ Table A2 gives candidate delays (seconds) for the low and high flow groups using
 | 6C02060 | 40.0 | 2.0 | 0.0 | 0.0 |
 | 6C02107 | 40.0 | 7.5 | 0.0 | 0.0 |
 | 6C02108 | 36.0 | 14.0 | 22.0 | 28.0 |
+
+*Table A2. Heat-level candidate delays by source-time flow group, in seconds.*
+
+Table A3 reports the two comparisons shown in Figure 3 for each scored heat. Each difference is the MAE of the augmented model minus the MAE of its paired baseline. Negative values indicate lower error. Within each comparison, both models use the same target times and the count applies to each gas.
+
+| Heat | Targets from 10 s | Spectral history ΔMAE, CO₂ | Spectral history ΔMAE, CO | Targets from 30 s | Added spectra ΔMAE, CO₂ | Added spectra ΔMAE, CO |
+|---|---:|---:|---:|---:|---:|---:|
+| 6B03205 | — | — | — | — | — | — |
+| 6B03206 | 1291 | −0.40 | +1.05 | 1251 | −0.172 | +1.255 |
+| 6B03270 | 1393 | −0.09 | −1.66 | 1353 | +0.024 | +1.371 |
+| 6B03271 | 1400 | +0.17 | −0.83 | 1360 | +0.181 | +0.066 |
+| 6C02057 | 755 | −0.81 | −0.61 | 715 | +2.734 | +1.087 |
+| 6C02058 | 1323 | +3.61 | −0.98 | 1283 | +1.748 | +0.615 |
+| 6C02059 | 1535 | −0.63 | −2.71 | 1495 | −0.423 | +0.152 |
+| 6C02060 | 1353 | −0.41 | −2.98 | 1313 | −0.128 | +0.067 |
+| 6C02107 | 1439 | −0.46 | −0.64 | 1399 | −0.163 | +0.340 |
+| 6C02108 | 1441 | −0.57 | −0.90 | 1401 | −0.480 | −0.696 |
+
+*Table A3. Paired differences in 10 s ahead MAE (m³/s). Spectral history is compared with the current spectrum. Added spectra are compared with process history alone. Heat 6B03205 has no eligible gas labels.*
+
+| Heat | Forecast targets | Scored targets | CO₂ MAE (m³/s) | CO MAE (m³/s) |
+|---|---:|---:|---:|---:|
+| 6B03205 | 1459 | — | — | — |
+| 6B03206 | 1291 | 1291 | 2.45 | 6.04 |
+| 6B03270 | 1393 | 1393 | 2.51 | 6.92 |
+| 6B03271 | 1400 | 1400 | 2.15 | 4.54 |
+| 6C02057 | 755 | 755 | 8.99 | 9.58 |
+| 6C02058 | 1323 | 1323 | 4.93 | 3.71 |
+| 6C02059 | 1535 | 1535 | 2.44 | 5.20 |
+| 6C02060 | 1353 | 1353 | 1.82 | 3.74 |
+| 6C02107 | 1439 | 1439 | 1.92 | 2.77 |
+| 6C02108 | 1441 | 1441 | 1.54 | 4.64 |
+
+*Table A4. Joint-ensemble 10 s ahead forecasts and MAEs at target times from 10 s. Counts apply to each gas. No score is reported for 6B03205.*
+
+### 6.2 Full spectral surfaces
+
+Figures A1–A10 show each surface over its recorded time and wavelength ranges. The display grid samples the native-grid reconstruction at 121 time positions and 181 wavelengths. All panels use the same intensity range, 0–65,535 W/cm².
+
+![Reconstructed flame spectrum for heat 6B03205](../q1_q2/results/spectra/6B03205.png)
+
+*Figure A1. Reconstructed flame spectrum for heat 6B03205.*
+
+![Reconstructed flame spectrum for heat 6B03206](../q1_q2/results/spectra/6B03206.png)
+
+*Figure A2. Reconstructed flame spectrum for heat 6B03206.*
+
+![Reconstructed flame spectrum for heat 6B03270](../q1_q2/results/spectra/6B03270.png)
+
+*Figure A3. Reconstructed flame spectrum for heat 6B03270.*
+
+![Reconstructed flame spectrum for heat 6B03271](../q1_q2/results/spectra/6B03271.png)
+
+*Figure A4. Reconstructed flame spectrum for heat 6B03271.*
+
+![Reconstructed flame spectrum for heat 6C02057](../q1_q2/results/spectra/6C02057.png)
+
+*Figure A5. Reconstructed flame spectrum for heat 6C02057.*
+
+![Reconstructed flame spectrum for heat 6C02058](../q1_q2/results/spectra/6C02058.png)
+
+*Figure A6. Reconstructed flame spectrum for heat 6C02058.*
+
+![Reconstructed flame spectrum for heat 6C02059](../q1_q2/results/spectra/6C02059.png)
+
+*Figure A7. Reconstructed flame spectrum for heat 6C02059.*
+
+![Reconstructed flame spectrum for heat 6C02060](../q1_q2/results/spectra/6C02060.png)
+
+*Figure A8. Reconstructed flame spectrum for heat 6C02060.*
+
+![Reconstructed flame spectrum for heat 6C02107](../q1_q2/results/spectra/6C02107.png)
+
+*Figure A9. Reconstructed flame spectrum for heat 6C02107.*
+
+![Reconstructed flame spectrum for heat 6C02108](../q1_q2/results/spectra/6C02108.png)
+
+*Figure A10. Reconstructed flame spectrum for heat 6C02108.*
+
+### 6.3 Full process curves
+
+Figures A11–A20 show lance flow, cumulative oxygen volume, CO₂ and CO flows, and their cumulative volumes. Flow is in m³/s and volume is in m³. Time zero marks the first recorded observation. Each panel extends to the end of its own heat. Vertical limits vary by heat and signal.
+
+![Six reconstructed process signals for heat 6B03205](../q1_q2/results/process/6B03205.png)
+
+*Figure A11. Reconstructed process curves for heat 6B03205. Both gas records are all zero and their label validity remains unconfirmed.*
+
+![Six reconstructed process signals for heat 6B03206](../q1_q2/results/process/6B03206.png)
+
+*Figure A12. Reconstructed process curves for heat 6B03206.*
+
+![Six reconstructed process signals for heat 6B03270](../q1_q2/results/process/6B03270.png)
+
+*Figure A13. Reconstructed process curves for heat 6B03270.*
+
+![Six reconstructed process signals for heat 6B03271](../q1_q2/results/process/6B03271.png)
+
+*Figure A14. Reconstructed process curves for heat 6B03271.*
+
+![Six reconstructed process signals for heat 6C02057](../q1_q2/results/process/6C02057.png)
+
+*Figure A15. Reconstructed process curves for heat 6C02057. The observed record spans 387 s.*
+
+![Six reconstructed process signals for heat 6C02058](../q1_q2/results/process/6C02058.png)
+
+*Figure A16. Reconstructed process curves for heat 6C02058.*
+
+![Six reconstructed process signals for heat 6C02059](../q1_q2/results/process/6C02059.png)
+
+*Figure A17. Reconstructed process curves for heat 6C02059.*
+
+![Six reconstructed process signals for heat 6C02060](../q1_q2/results/process/6C02060.png)
+
+*Figure A18. Reconstructed process curves for heat 6C02060.*
+
+![Six reconstructed process signals for heat 6C02107](../q1_q2/results/process/6C02107.png)
+
+*Figure A19. Reconstructed process curves for heat 6C02107.*
+
+![Six reconstructed process signals for heat 6C02108](../q1_q2/results/process/6C02108.png)
+
+*Figure A20. Reconstructed process curves for heat 6C02108.*
+
+### 6.4 Full joint-ensemble forecast traces
+
+![Analyzer readings and 10 s ahead joint-ensemble forecasts for all ten held-out heats](../q3/results/predictions_10s.png)
+
+*Figure A21. Analyzer readings and 10 s ahead joint-ensemble forecasts. The horizontal axis is the analyzer target time, beginning at 10 s, and the vertical axis is gas flow (m³/s). Each column uses a common vertical scale across heats. Heat 6B03205 shows forecasts only because its gas labels could not be verified. Table A4 reports scores for the nine eligible heats.*

@@ -2,7 +2,6 @@
 
 import matplotlib
 matplotlib.use("Agg")
-from matplotlib import font_manager
 from matplotlib import pyplot as plt
 from matplotlib.colors import Normalize
 import numpy as np
@@ -64,14 +63,6 @@ PROCESS_AXES = (
 )
 
 
-def zero_label():
-    families = {font.name for font in font_manager.fontManager.ttflist}
-    for family in ("Microsoft YaHei", "Noto Sans CJK SC", "SimSun", "PingFang SC"):
-        if family in families:
-            return "原始记录全零，标签有效性待确认", family
-    return "Raw gas records all zero · label validity unconfirmed", "DejaVu Sans"
-
-
 def process_panels(heat, process, destination):
     fig, axes = plt.subplots(3, 2, figsize=(10.5, 8.1), sharex=True, layout="constrained")
     fig.suptitle(f"{heat}   Continuous process curves · 0–{process.time[-1]:g} s", fontsize=15)
@@ -81,9 +72,8 @@ def process_panels(heat, process, destination):
                title=title, ylabel=unit)
         ax.grid(alpha=0.7)
         if process.all_zero and n >= 2:
-            note, family = zero_label()
-            ax.text(0.04, 0.88, note, transform=ax.transAxes, ha="left", va="top",
-                    fontfamily=family, fontsize=8.5, color="#8a302a")
+            ax.text(0.04, 0.88, "All recorded values are zero. Label validity unconfirmed.",
+                    transform=ax.transAxes, ha="left", va="top", fontsize=8.5, color="#8a302a")
         if n >= 4:
             ax.set_xlabel("Time (s)")
     save(fig, destination)

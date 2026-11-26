@@ -30,11 +30,11 @@ def plot_predictions(source, destination):
     draw = ImageDraw.Draw(image)
     title, label, small = font(36), font(25), font(20)
     ink, grid, measured, forecast = "#162332", "#d7dfe6", "#364453", "#007e8a"
-    draw.text((80, 32), "Ten held-out heats | 10 s ahead", fill=ink, font=title)
+    draw.text((80, 32), "10 s ahead gas forecasts for ten held-out heats", fill=ink, font=title)
     draw.line((80, 95, 123, 95), measured, 3)
-    draw.text((132, 82), "Measured", fill=ink, font=small)
+    draw.text((132, 82), "Analyzer reading", fill=ink, font=small)
     draw.line((300, 95, 343, 95), forecast, 4)
-    draw.text((352, 82), "Joint ensemble", fill=ink, font=small)
+    draw.text((352, 82), "Joint ensemble forecast", fill=ink, font=small)
     last_time = max(float(heat[-1]["target_s"]) for heat in heats.values())
     x_max = (int(last_time) // 200 + 1) * 200
 
@@ -47,7 +47,8 @@ def plot_predictions(source, destination):
         y_max = (int(peak) // tick + 1) * tick
         left = 184 + col * 708
         width, height = 640, 135
-        draw.text((left, 132), f"{target} (m³/s)", fill=ink, font=label)
+        gas_name = "Carbon dioxide" if target == "CO2" else "Carbon monoxide"
+        draw.text((left, 132), f"{gas_name} flow (m³/s)", fill=ink, font=label)
         for i, (name, rows) in enumerate(heats.items()):
             top = 176 + i * 168
             bottom = top + height
