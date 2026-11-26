@@ -6,7 +6,9 @@
 
 ## 数据与运行
 
-当前十炉文件位于 `work_b/Data/`，其中附件 1 是主办方修订版。旧附件 1 保留在 `work_b/legacy/`，导出与核查见 [炉次接口](q1_q2/heat_interface.md)。如需在当前数据上重生成探索性审计，安装依赖 python -m pip install -r requirements.txt 后，依次运行：
+当前十炉文件位于 `work_b/Data/`，其中附件 1 是主办方修订版。旧附件 1 保留在 `work_b/legacy/`，导出与核查见 [炉次接口](q1_q2/heat_interface.md)。第二问当前十炉图表与时延请使用下方独立命令。
+
+`B_audit/` 中的分析报告和结果表对应附件修订前的数据。如需复现整套历史审计，在旧版提交（如 `a1006a1`）的独立工作目录中安装根目录依赖后运行：
 
     python B_audit/extract.py
     python B_audit/analyze.py
@@ -14,7 +16,7 @@
     python B_audit/spectra.py
     python B_audit/report.py
 
-生成的 .npy、逐炉 JSON 和本地依赖不纳入 Git。运行上述审计脚本会覆盖 `B_audit/` 中的历史结果，包括第三问原先使用的时延表。第二问当前十炉图表与时延请使用下方独立命令。
+生成的 .npy、逐炉 JSON 和本地依赖不纳入 Git。历史审计脚本会覆盖其工作目录下的同名结果，包括第三问原先使用的时延表。
 
 ## 前两问正式图表复现
 
