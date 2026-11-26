@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
 .venv/
-work_b/
+work_b/deps/
 B_audit/*.npy
 B_audit/6*.json

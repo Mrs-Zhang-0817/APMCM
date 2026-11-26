@@ -6,7 +6,7 @@
 
 ## 数据与运行
 
-原始十炉文件各自放在仓库根目录 work_b/Data/，文件名保持官方原样。安装 Python 依赖 numpy、Pillow、pyxlsb 后，依次运行：
+原始十炉文件已包含在仓库的 work_b/Data/。安装依赖 python -m pip install -r requirements.txt 后，依次运行：
 
     python B_audit/extract.py
     python B_audit/analyze.py
@@ -14,7 +14,7 @@
     python B_audit/spectra.py
     python B_audit/report.py
 
-生成的 .npy、逐炉 JSON 和原始数据不纳入 Git。运行脚本会覆盖 B_audit 中同名结果，执行前先检查本地修改。
+生成的 .npy、逐炉 JSON 和本地依赖不纳入 Git。运行脚本会覆盖 B_audit 中同名结果，执行前先检查本地修改。
 
 ## 共同约定
 
