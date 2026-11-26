@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+.venv/
+work_b/
+B_audit/*.npy
+B_audit/6*.json
