@@ -7,6 +7,18 @@ import numpy as np
 from pyxlsb import open_workbook
 
 
+def valid_headers(labels):
+    if len(labels) != 2051:
+        return False
+    sequence, oxygen, co2, co = (str(labels[i]).strip() for i in (0, -3, -2, -1))
+    return (
+        sequence in {"Sequence", "序列Sequence", "序列"}
+        and oxygen in {"YQXH", "Cumulative oxygen consumption", "累积耗氧量"}
+        and co2.replace("₂", "2") in {"CO2 concentration", "CO2浓度"}
+        and co in {"CO concentration", "CO浓度"}
+    )
+
+
 def export(source, target, window):
     if window < 1:
         raise ValueError("window must be positive")
@@ -15,10 +27,8 @@ def export(source, target, window):
         with book.get_sheet(heat) as sheet:
             rows = iter(sheet.rows(sparse=True))
             labels = [cell.v for cell in next(rows)]
-            if (not labels[0].endswith("Sequence") or labels[-3] not in
-                    ("YQXH", "Cumulative oxygen consumption") or
-                    labels[-2:] != ["CO\u2082 concentration", "CO concentration"]):
-                raise ValueError("Unexpected headers")
+            if not valid_headers(labels):
+                raise ValueError(f"Unexpected headers in {source}: {labels[0]!r}, {labels[-3:]!r}")
             wave = np.asarray(labels[1:-3], dtype=float)
             data = np.asarray([[c.v for c in r] for r in rows], dtype=float)
     seq = data[:, 0]
