@@ -72,7 +72,7 @@ Table 1 uses common target times starting at 10 s for both concurrent and advanc
 
 *Table 1. Heat-averaged MAE in m³/s. All columns score the same analyzer target timestamps within each heat.*
 
-Spectral history lowered 10 s ahead CO error by 1.14 m³/s. CO₂ exhibited a small increase. The joint ensemble struggled on the short heat 6C02057, with CO₂ MAE of 8.99 m³/s. This heat remains in the reported average.
+The spectral-history predictor lowered 10 s ahead CO MAE in eight of nine heats, by 1.14 m³/s on average. For CO₂, seven heats improved, but the 3.61 m³/s increase in 6C02058 outweighed the smaller gains (Table A3). This comparison evaluates two complete predictors: the history variant also uses log-transformed bands, a clipping indicator and a larger ridge penalty. As a check on the contribution of temporal information, we repeated the comparison with the same 16-band input and ridge penalty (10), adding only trailing 5, 10 and 20 s features. On targets from 30 s, CO MAE fell from 13.595 to 11.556 m³/s, whereas CO₂ MAE rose from 3.623 to 3.675 m³/s. The joint ensemble struggled on the short heat 6C02057, with CO₂ MAE of 8.99 m³/s. This heat remains in the reported average.
 
 A separate paired experiment scored 11,570 heat–time combinations from 30 s onward to allow history features to warm up. Holding the regression penalty, training weights and targets fixed, adding spectral features raised process-history MAE from 4.935 to 5.408 m³/s for CO and from 2.685 to 3.053 m³/s for CO₂. Interpolating interior clipped channels using their neighbours within the same frame changed every heat-level gas MAE by less than 0.0003 m³/s.
 
@@ -84,7 +84,7 @@ For the delay test, only candidate offsets supported by at least two training he
 
 ## 5. Conclusions
 
-A short spectral history helped forecast CO in an unseen heat when the furnace-mouth spectrum was the only input. The same benefit did not extend to CO₂. When oxygen-supply records were available, process history gave lower average errors and the tested spectral features added no average benefit. These findings concern the delayed analyzer readings of nine evaluable heats. Broader claims about new plants, clipped peak heights or the composition inside the bath require observations beyond this dataset.
+A short spectral history helped forecast CO in an unseen heat when the furnace-mouth spectrum was the only input. The corresponding heat-averaged CO₂ error did not improve. When oxygen-supply records were available, process history gave lower average errors and the tested spectral features added no average benefit. These findings concern the delayed analyzer readings of nine evaluable heats. Broader claims about new plants, clipped peak heights or the composition inside the bath require observations beyond this dataset.
 
 ## 6. Appendix: heat-level results and figures
 
