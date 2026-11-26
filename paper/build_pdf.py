@@ -32,7 +32,9 @@ small=style("small","Body",8,10)
 mono=style("code","Code",7,9)
 def paragraph(value, form=body):
     value=re.sub(r'\[([^\]]+)\]\([^)]+\)',r'\1',value).replace('**','').strip('*')
-    return Paragraph(escape(value),form)
+    # Arial's embedded TrueType map omits these Unicode subscripts and signs.
+    markup = escape(value).replace("CO₂", "CO<sub>2</sub>").replace("⁻¹³", "<super>−13</super>")
+    return Paragraph(markup, form)
 
 class Paper(SimpleDocTemplate):
     def afterFlowable(self, item):
