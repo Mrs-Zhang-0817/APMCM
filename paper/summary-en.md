@@ -1,0 +1,11 @@
+# Reconstructing Converter Flame Spectra and Forecasting Delayed Flue-Gas Measurements
+
+## Summary
+
+Flame spectra and flue-gas measurements describe the same steelmaking process on different time scales. We used records from ten converter heats to reconstruct the observed signals, examine the delay between oxygen supply and gas response, and test whether spectra could forecast gas measurements in a previously unseen heat.
+
+We screened isolated spectral observations against their neighbours in time and wavelength and reconstructed the surface on each heat's native wavelength grid. Across 10,000 withheld interior observations that passed quality screening, the pooled mean absolute error (MAE) was 100.05 W/cm² and the root mean squared error was 153.22 W/cm². For offline process analysis, we reconstructed cumulative oxygen consumption with a monotone piecewise cubic curve and obtained oxygen flow from its derivative. Replacing the original flow estimate shifted the location of 80 of 90 candidate correlation peaks across heat, gas and process groups. The inferred delays therefore depend on the flow reconstruction; the available records do not independently identify gas transport time.
+
+For prediction, we used only measurements available when issuing each forecast. We produced predictions for all ten heats and evaluated nine by leave-one-heat-out validation. One heat had two all-zero gas records that disagreed with the problem's example and was retained for prediction without quantitative scoring. For forecasts issued 10 seconds in advance and scored from 10 seconds after the start of each heat, adding spectral history reduced the heat-averaged CO MAE from 13.62 to 12.48 m³/s. The corresponding CO₂ error rose from 3.99 to 4.04 m³/s. In a paired comparison scored from 30 seconds, a model using oxygen-supply and process history achieved MAEs of 4.935 m³/s for CO and 2.685 m³/s for CO₂. Adding spectral features raised these errors to 5.408 and 3.053 m³/s. Thus spectral history improved CO forecasts when only spectra were available, while oxygen-supply history provided the stronger baseline when process measurements were available.
+
+**Keywords:** converter steelmaking, spectral reconstruction, flue gas, time delay, leave-one-heat-out validation
