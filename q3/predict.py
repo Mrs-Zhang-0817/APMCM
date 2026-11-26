@@ -5,9 +5,10 @@ import csv
 from dataclasses import dataclass
 from itertools import combinations
 from pathlib import Path
-from tempfile import TemporaryDirectory
 
 import numpy as np
+
+from q3.data import CURRENT_LAGS, heat_exports
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -58,7 +59,7 @@ def common_bands(wave, spectrum, flags):
     return np.diff(cumulative[:, ends], axis=1) / np.diff(edges)
 
 
-def load_heat(path):
+def load_heat(path, spectrum_transform=None):
     with np.load(path, allow_pickle=False) as data:
         heat = str(data["heat_id"].item())
         time = data["time_s"]
@@ -66,7 +67,10 @@ def load_heat(path):
         gas = np.column_stack((data["co2"], data["co"]))
         eligible = data["gas_label_eligible"]
         flags = data["quality_flags"]
-        bands = common_bands(data["wavelength_nm"], data["spectrum"], flags)
+        wave, spectrum = data["wavelength_nm"], data["spectrum"]
+        if spectrum_transform is not None:
+            spectrum = spectrum_transform(wave, spectrum, flags)
+        bands = common_bands(wave, spectrum, flags)
     if len(time) <= max(HORIZONS) or not np.array_equal(time, np.arange(len(time)) * STEP_S):
         raise ValueError(f"Unexpected time grid for {heat}")
     if not np.isfinite(oxygen).all() or np.any(np.diff(oxygen) < 0):
@@ -295,24 +299,15 @@ def write_csv(path, rows):
 
 
 def load_heats(exports):
-    if exports is not None:
-        heats = [load_heat(path) for path in sorted(exports.glob("*.npz"))]
-    else:
-        from q1_q2.export_heat import export
-
-        with TemporaryDirectory() as temp:
-            heats = []
-            for i, source in enumerate(sorted((ROOT / "work_b" / "Data").glob("*.xlsb"))):
-                output = Path(temp) / f"{i}.npz"
-                export(source, output, 1)
-                heats.append(load_heat(output))
+    with heat_exports(exports) as directory:
+        heats = [load_heat(path) for path in sorted(directory.glob("*.npz"))]
     return sorted(heats, key=lambda heat: heat.name)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--exports", type=Path, help="Directory of verified per-heat NPZ files")
-    parser.add_argument("--lags", type=Path, default=ROOT / "B_audit" / "signed_lags.csv")
+    parser.add_argument("--lags", type=Path, default=CURRENT_LAGS)
     parser.add_argument("--output", type=Path, default=ROOT / "q3" / "results")
     args = parser.parse_args()
     heats = load_heats(args.exports)

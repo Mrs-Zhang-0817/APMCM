@@ -6,7 +6,7 @@ Flame spectra and flue-gas measurements describe the same steelmaking process on
 
 We screened isolated spectral observations against their neighbours in time and wavelength and reconstructed the surface on each heat's native wavelength grid. Across 10,000 withheld interior observations that passed quality screening, the pooled mean absolute error (MAE) was 100.05 W/cm² and the root mean squared error was 153.22 W/cm². For offline process analysis, we reconstructed cumulative oxygen consumption with a monotone piecewise cubic curve and obtained oxygen flow from its derivative. Replacing the original flow estimate shifted the location of 90 of 100 candidate correlation peaks across heat, gas and process groups. The inferred delays depend on the flow reconstruction. The available records do not independently identify gas transport time.
 
-The historical forecasting experiment preceded the organizer's revision of Attachment 1. It used only measurements available when issuing each forecast and scored nine heats by leave-one-heat-out validation. The revised gas readings for 6B03205 are included in the process analysis. For forecasts issued 10 seconds in advance and scored from 10 seconds after the start of each heat, adding spectral history reduced the heat-averaged CO MAE from 13.62 to 12.48 m³/s. The corresponding CO₂ error rose from 3.99 to 4.04 m³/s. In a paired comparison scored from 30 seconds, a model using oxygen-supply and process history achieved MAEs of 4.935 m³/s for CO and 2.685 m³/s for CO₂. Adding spectral features raised these errors to 5.408 and 3.053 m³/s. Thus spectral history improved CO forecasts when only spectra were available, while oxygen-supply history provided the stronger baseline when process measurements were available.
+All ten heats were scored by leave-one-heat-out validation using the revised gas labels. With spectra alone, history lowered the ten-heat 10 s forecast MAE for CO from 14.03 to 13.38 m³/s and improved eight heats. CO₂ MAE rose from 4.00 to 4.04 m³/s despite improvements in eight heats. When oxygen-supply and process history were available, the matched comparison scored from 30 s showed a small average CO improvement, from 5.736 to 5.671 m³/s, with improvements in three heats. CO₂ MAE rose from 2.828 to 3.047 m³/s. Paired heat-resampling intervals included zero for all four comparisons. The gains from adding spectra to process history were inconsistent across the ten heats.
 
 **Keywords:** converter steelmaking, spectral reconstruction, flue gas, time delay, leave-one-heat-out validation
 
@@ -26,7 +26,7 @@ A flame spectrum is available at the converter mouth before the corresponding fl
 
 Each attachment supplies a sequence number, 2,047 spectral channels, cumulative oxygen volume and two gas measurements. We assign time zero to the first sample. The four B-series heats cover 340.535–1027.963 nm and the six C-series heats cover 339.390–1023.303 nm. We retain the native axes for reconstruction and use common physical wavelengths for prediction. The gas columns are labelled concentration in the files; we follow the problem's definition of instantaneous volumetric flow in m³/s. Integrating these values gives volume in m³.
 
-The organizer revised the gas readings for heat 6B03205. All 1,479 revised time points pass the label-quality screen. The sequence, wavelengths, spectral intensities and cumulative oxygen readings match the original file exactly. The original file is archived. Section 3 uses the revised ten-heat dataset. Section 4 and its forecast tables and figures report the historical experiment with nine scored heats, conducted before the revision. Heat 6C02057 spans 387 s under the nominal sampling interval. Its timestamps cannot be independently verified, so it retains its original duration throughout the analysis.
+The organizer revised the gas readings for heat 6B03205. All 1,479 revised time points pass the label-quality screen. The sequence, wavelengths, spectral intensities and cumulative oxygen readings match the original file exactly. The original file is archived. The process analysis and all current forecast comparisons use the revised ten-heat dataset. Heat 6C02057 spans 387 s under the nominal sampling interval. Its timestamps cannot be independently verified, so it retains its original duration throughout the analysis.
 
 ## 2. Reconstructing the flame spectrum
 
@@ -58,33 +58,35 @@ For candidate delay estimation we compared 5 s changes in smoothed flow with lat
 
 ## 4. Predicting gas readings in an unseen heat
 
-We forecast each held-out heat using the other labelled heats. Forecast inputs use current and past observations only. In each frame we integrate spectral intensity in 16 bands over 341–1023 nm. The spectral history model adds trailing changes and smoothed spectral information. Process history includes elapsed time, cumulative oxygen, backward flow estimates and features for process progression. Ridge models are standardized using their training heats. The joint ensemble combines static fusion, historical fusion and lag-augmented historical fusion; weights are chosen separately for each gas by an inner leave-one-heat-out evaluation.
+We used leave-one-heat-out validation over all ten scored heats. Each test heat was excluded from training, standardization, ensemble weight selection and lag estimation. The nine remaining heats supplied supervision. Inputs use current and past measurements only. We integrate spectra in 16 bands over 341–1023 nm. Spectral-history features summarize trailing observations. Process-history inputs include elapsed time, cumulative oxygen and backward flow estimates. The ridge-based joint ensemble combines static, historical and lag-augmented fusion. Its weights are chosen for each gas and horizon using only the training heats.
 
-Table 1 uses common target times starting at 10 s for both concurrent and advance predictions. Errors are computed within each heat and then averaged equally across the nine labelled heats.
+Table 1 scores identical analyzer target times from 10 s for concurrent estimates and 10 s ahead forecasts. MAE is computed within each heat and averaged equally across the ten heats. At the 10 s horizon the joint ensemble achieved MAEs of 3.04 m³/s for CO₂ and 5.50 m³/s for CO. The process-history model achieved 2.80 and 5.54 m³/s.
 
 | Model | Concurrent CO₂ | Concurrent CO | 10 s ahead CO₂ | 10 s ahead CO |
 |---|---:|---:|---:|---:|
-| Training mean | 3.95 | 16.58 | 3.95 | 16.58 |
-| Current spectrum | 4.04 | 13.73 | 3.99 | 13.62 |
-| Spectral history | 4.20 | 12.60 | 4.04 | 12.48 |
-| Process history | 2.70 | 4.76 | 2.67 | 4.77 |
-| Joint ensemble | 3.11 | 5.21 | 3.19 | 5.24 |
+| Training mean | 3.98 | 16.82 | 3.98 | 16.82 |
+| Current spectrum | 4.06 | 14.13 | 4.00 | 14.03 |
+| Spectral history | 4.21 | 13.48 | 4.04 | 13.38 |
+| Process history | 2.83 | 5.52 | 2.80 | 5.54 |
+| Joint ensemble | 3.06 | 5.48 | 3.04 | 5.50 |
 
-*Table 1. Heat-averaged MAE in m³/s. All columns score the same analyzer target timestamps within each heat.*
+*Table 1. Heat-averaged MAE in m³/s on common target timestamps.*
 
-The spectral-history predictor lowered 10 s ahead CO MAE in eight of nine heats, by 1.14 m³/s on average. For CO₂, seven heats improved, but the 3.61 m³/s increase in 6C02058 outweighed the smaller gains (Table A3). This comparison evaluates two complete predictors: the history variant also uses log-transformed bands, a clipping indicator and a larger ridge penalty. As a check on the contribution of temporal information, we repeated the comparison with the same 16-band input and ridge penalty (10), adding only trailing 5, 10 and 20 s features. On targets from 30 s, CO MAE fell from 13.595 to 11.556 m³/s, whereas CO₂ MAE rose from 3.623 to 3.675 m³/s. The joint ensemble struggled on the short heat 6C02057, with CO₂ MAE of 8.99 m³/s. This heat remains in the reported average.
+With spectra alone, spectral history lowered the CO MAE by 0.645 m³/s and improved eight heats. For CO₂, eight heats improved, but the heat-averaged error increased by 0.047 m³/s. Heat 6C02058 had the largest CO₂ deterioration, at 3.312 m³/s. This comparison uses two complete predictors whose transformations and ridge penalties differ. In a controlled check from target time 30 s, both models used the same 16-band input and ridge penalty of 10, and the history model also used trailing 5, 10 and 20 s features. CO MAE fell from 13.957 to 12.527 m³/s and CO₂ MAE rose from 3.666 to 3.718 m³/s. Nested selection over history windows and ridge penalties yielded 12.321 m³/s for CO and 3.662 m³/s for CO₂.
 
-A separate paired experiment scored 11,570 heat–time combinations from 30 s onward to allow history features to warm up. Holding the regression penalty, training weights and targets fixed, adding spectral features raised process-history MAE from 4.935 to 5.408 m³/s for CO and from 2.685 to 3.053 m³/s for CO₂. Interpolating interior clipped channels using their neighbours within the same frame changed every heat-level gas MAE by less than 0.0003 m³/s.
+The paired process-history comparison uses 12,989 heat–time combinations from 30 s onward. Both models used the same targets, training weights and ridge penalty. Adding spectra reduced the CO MAE from 5.736 to 5.671 m³/s and improved three heats. It increased the CO₂ MAE from 2.828 to 3.047 m³/s and improved seven heats. The 95% percentile intervals from resampling the ten paired heat differences include zero for both gases and both comparisons in Figure 3. These intervals describe sensitivity across the observed heats. They do not establish performance on a new plant.
 
 ![Two paired comparisons of heat-averaged MAE for 10 s ahead CO₂ and CO forecasts](figures/forecast_comparisons.png)
 
-*Figure 3. Two comparisons of 10 s ahead forecasts across nine scored heats. Panel (a) compares current spectra with spectral history at common targets from 10 s. Panel (b) compares process history with and without spectra at common targets from 30 s. Each connector joins two models evaluated on the same targets for that gas. Vertical scales differ between panels. Table A3 reports heat-level differences, and Figure A21 shows the full joint-ensemble forecasts.*
+*Figure 3. Paired comparisons of 10 s ahead forecasts across ten scored heats. Panel (a) compares current spectra with spectral history at targets from 10 s. Panel (b) compares process history with and without spectra at targets from 30 s. Each connector joins models evaluated on the same targets for that gas. Vertical scales differ between panels. Table A3 reports the differences by heat, and Figure A21 shows the full joint-ensemble forecasts.*
 
-For the delay test, only candidate offsets supported by at least two training heats were eligible. When an estimated offset exceeded the 10 s forecast horizon, we added the spectral change between forecast issuance and the earlier candidate source time. CO never satisfied the support rule. CO₂ triggered the adjustment in seven folds, all based on the same two supporting heats. Its macro MAE rose from 3.053 to 3.101 m³/s. The delay rule therefore yielded no average gain under this evaluation.
+Within-frame interpolation of clipped channels changed every heat-level gas MAE by less than 0.00018 m³/s. For the lag comparison, at least two training heats had to support a candidate offset, and the estimated offset had to exceed 10 s to add an earlier spectral feature. CO₂ triggered the rule in all ten folds, with training-only offsets of 30, 32 or 34 s. Its MAE rose from 3.047 to 3.064 m³/s. CO never met the support rule and used the unadjusted predictor in all ten folds.
+
+For a separate check on heat 6B03205, we scored the joint-ensemble predictions saved before the revised gas labels were released. On 1,459 target times from 10 s, the frozen forecasts gave MAEs of 3.194 m³/s for CO₂ and 9.157 m³/s for CO. These scores are reported separately from the ten-heat refit.
 
 ## 5. Conclusions
 
-A short spectral history helped forecast CO in an unseen heat when the furnace-mouth spectrum was the only input. The corresponding heat-averaged CO₂ error did not improve. When oxygen-supply records were available, process history gave lower average errors and the tested spectral features added no average benefit. These findings concern the delayed analyzer readings of nine evaluable heats. Broader claims about new plants, clipped peak heights or the composition inside the bath require observations beyond this dataset.
+Spectral history lowered the average CO forecast error when only spectra were available. The CO₂ average did not improve, even though most heats showed a small reduction. When oxygen-supply and process history were available, adding spectra produced a small average CO gain concentrated in three heats and a higher average CO₂ error. Weak and processing-sensitive correlation peaks limit the interpretation of candidate delays. The results quantify prediction of delayed analyzer readings in this dataset. Clipped peak heights, in-bath gas composition and transfer to other plants require independent measurements.
 
 ## 6. Appendix: heat-level results and figures
 
@@ -128,33 +130,33 @@ Table A3 reports the two comparisons shown in Figure 3 for each scored heat. Eac
 
 | Heat | Targets from 10 s | Spectral history ΔMAE, CO₂ | Spectral history ΔMAE, CO | Targets from 30 s | Added spectra ΔMAE, CO₂ | Added spectra ΔMAE, CO |
 |---|---:|---:|---:|---:|---:|---:|
-| 6B03205 | — | — | — | — | — | — |
-| 6B03206 | 1291 | −0.40 | +1.05 | 1251 | −0.172 | +1.255 |
-| 6B03270 | 1393 | −0.09 | −1.66 | 1353 | +0.024 | +1.371 |
-| 6B03271 | 1400 | +0.17 | −0.83 | 1360 | +0.181 | +0.066 |
-| 6C02057 | 755 | −0.81 | −0.61 | 715 | +2.734 | +1.087 |
-| 6C02058 | 1323 | +3.61 | −0.98 | 1283 | +1.748 | +0.615 |
-| 6C02059 | 1535 | −0.63 | −2.71 | 1495 | −0.423 | +0.152 |
-| 6C02060 | 1353 | −0.41 | −2.98 | 1313 | −0.128 | +0.067 |
-| 6C02107 | 1439 | −0.46 | −0.64 | 1399 | −0.163 | +0.340 |
-| 6C02108 | 1441 | −0.57 | −0.90 | 1401 | −0.480 | −0.696 |
+| 6B03205 | 1459 | +0.26 | +0.58 | 1419 | −0.179 | +0.596 |
+| 6B03206 | 1291 | −0.46 | −0.44 | 1251 | −0.192 | +0.776 |
+| 6B03270 | 1393 | −0.32 | −2.22 | 1353 | −0.042 | +0.517 |
+| 6B03271 | 1400 | −0.03 | −0.50 | 1360 | +0.175 | +0.226 |
+| 6C02057 | 755 | −0.62 | −0.65 | 715 | +2.056 | −3.275 |
+| 6C02058 | 1323 | +3.31 | +2.74 | 1283 | +1.613 | +0.808 |
+| 6C02059 | 1535 | −0.53 | −2.30 | 1495 | −0.447 | −0.075 |
+| 6C02060 | 1353 | −0.34 | −2.63 | 1313 | −0.087 | +0.326 |
+| 6C02107 | 1439 | −0.35 | −0.32 | 1399 | −0.124 | +0.206 |
+| 6C02108 | 1441 | −0.45 | −0.72 | 1401 | −0.584 | −0.753 |
 
-*Table A3. Paired differences in 10 s ahead MAE (m³/s). Spectral history is compared with the current spectrum. Added spectra are compared with process history alone. Heat 6B03205 has no eligible gas labels.*
+*Table A3. Paired differences in 10 s ahead MAE (m³/s). Spectral history is compared with the current spectrum. Added spectra are compared with process history alone.*
 
 | Heat | Forecast targets | Scored targets | CO₂ MAE (m³/s) | CO MAE (m³/s) |
 |---|---:|---:|---:|---:|
-| 6B03205 | 1459 | — | — | — |
-| 6B03206 | 1291 | 1291 | 2.45 | 6.04 |
-| 6B03270 | 1393 | 1393 | 2.51 | 6.92 |
-| 6B03271 | 1400 | 1400 | 2.15 | 4.54 |
-| 6C02057 | 755 | 755 | 8.99 | 9.58 |
-| 6C02058 | 1323 | 1323 | 4.93 | 3.71 |
-| 6C02059 | 1535 | 1535 | 2.44 | 5.20 |
-| 6C02060 | 1353 | 1353 | 1.82 | 3.74 |
-| 6C02107 | 1439 | 1439 | 1.92 | 2.77 |
-| 6C02108 | 1441 | 1441 | 1.54 | 4.64 |
+| 6B03205 | 1459 | 1459 | 3.19 | 9.16 |
+| 6B03206 | 1291 | 1291 | 1.94 | 5.63 |
+| 6B03270 | 1393 | 1393 | 2.43 | 5.73 |
+| 6B03271 | 1400 | 1400 | 2.04 | 4.79 |
+| 6C02057 | 755 | 755 | 9.46 | 9.69 |
+| 6C02058 | 1323 | 1323 | 4.41 | 3.59 |
+| 6C02059 | 1535 | 1535 | 2.06 | 4.76 |
+| 6C02060 | 1353 | 1353 | 1.54 | 3.40 |
+| 6C02107 | 1439 | 1439 | 2.01 | 2.95 |
+| 6C02108 | 1441 | 1441 | 1.27 | 5.32 |
 
-*Table A4. Joint-ensemble 10 s ahead forecasts and MAEs at target times from 10 s. Counts apply to each gas. No score is reported for 6B03205.*
+*Table A4. Joint-ensemble 10 s ahead forecasts and MAEs at target times from 10 s. Counts apply to each gas.*
 
 ### 6.2 Full spectral surfaces
 
@@ -248,4 +250,4 @@ Figures A11–A20 show lance flow, cumulative oxygen volume, CO₂ and CO flows,
 
 ![Analyzer readings and 10 s ahead joint-ensemble forecasts for all ten held-out heats](../q3/results/predictions_10s.png)
 
-*Figure A21. Historical analyzer readings and 10 s ahead joint-ensemble forecasts, before the revision of Attachment 1. The horizontal axis is the analyzer target time, beginning at 10 s, and the vertical axis is gas flow (m³/s). Each column uses a common vertical scale across heats. The historical experiment produced forecasts only for 6B03205. Table A4 reports scores for the nine heats with eligible labels at the time.*
+*Figure A21. Analyzer readings and 10 s ahead joint-ensemble forecasts for all ten revised heats. The horizontal axis shows analyzer target time and the vertical axis shows volumetric gas flow (m³/s). Each column uses a common vertical scale across heats. Heat 6B03205 is scored using the revised measurements. Table A4 reports the heat-level errors.*

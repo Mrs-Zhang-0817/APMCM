@@ -3,17 +3,37 @@ import argparse
 import csv
 import json
 from pathlib import Path
+import sys
 
 import numpy as np
 
-ROOT = Path(__file__).resolve().parents[1]
-BAD_HEAT = "6B03205"
+if not __package__:
+    sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from q3.data import heat_exports, label_mask
+
 DT = 0.5
 
 
 def read_heats(directory):
     heats = {}
-    for file in sorted(directory.glob("6*.npy")):
+    npz_files = sorted(directory.glob("*.npz"))
+    npy_files = sorted(directory.glob("6*.npy"))
+    if npz_files and npy_files:
+        raise ValueError("Use separate directories for NPZ and NPY inputs")
+    for file in npz_files:
+        with np.load(file, allow_pickle=False) as saved:
+            heat = saved["heat_id"].item()
+            time = saved["time_s"]
+            wave = saved["wavelength_nm"]
+            gas = np.column_stack((saved["co2"], saved["co"]))
+            values = np.column_stack((time / DT + 1, saved["spectrum"], saved["oxygen_cumulative"], gas))
+            eligible = saved["gas_label_eligible"]
+        if not np.array_equal(time, np.arange(len(time)) * DT) or not np.all(np.diff(wave) > 0):
+            raise ValueError(f"Unexpected time or wavelength grid: {file}")
+        if heat in heats or not np.array_equal(eligible, label_mask(gas)):
+            raise ValueError(f"Duplicate heat or inconsistent label flags: {file}")
+        heats[heat] = values, wave, eligible
+    for file in npy_files:
         metadata = file.with_suffix(".json")
         if not metadata.exists():
             raise ValueError(f"Missing wavelength metadata: {metadata}")
@@ -26,10 +46,10 @@ def read_heats(directory):
             raise ValueError(f"Nonfinite data or unordered wavelengths: {file}")
         if not np.all(np.diff(data[:, 0]) == 1):
             raise ValueError(f"Nonconsecutive sequence: {file}")
-        heats[file.stem] = (data, wave)
-    if len(heats) != 10 or BAD_HEAT not in heats:
+        heats[file.stem] = data, wave, label_mask(data[:, -2:])
+    if len(heats) != 10 or "6B03205" not in heats:
         raise ValueError("Expected all ten heats, including 6B03205")
-    return heats
+    return dict(sorted(heats.items()))
 
 
 def features(data, wave):
@@ -75,48 +95,48 @@ def write_csv(path, rows):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=Path, default=ROOT / "B_audit")
+    parser.add_argument("--input", type=Path, help="Directory of heat NPZ files or legacy NPY cache")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--alpha", type=float, default=10.0)
     args = parser.parse_args()
     if args.alpha <= 0:
         parser.error("alpha must be positive")
-    heats = read_heats(args.input)
+    with heat_exports(args.input) as directory:
+        heats = read_heats(directory)
     prepared = {}
-    for heat, (data, wave) in heats.items():
+    for heat, (data, wave, eligible) in heats.items():
         if wave[0] > 341 or wave[-1] < 1023:
             raise ValueError(f"Insufficient wavelength coverage: {heat}")
-        prepared[heat] = (*features(data, wave), data[:, -2:])
+        prepared[heat] = (*features(data, wave), data[:, -2:], eligible)
     metrics, predictions = [], []
-    for heat, (_, _, _, target) in prepared.items():
+    for heat in prepared:
         for horizon in (0, 20):  # samples; 20 corresponds to 10 seconds
             for mode in ("mean", "spectrum", "history", "process", "fusion"):
                 def select(item):
-                    bands, history, process, y = item
+                    bands, history, process, y, valid = item
                     x = {"mean": np.ones((len(y), 1)), "spectrum": bands,
                          "history": history, "process": process,
                          "fusion": np.column_stack((history, process))}[mode]
                     # Same target times across horizons and models, with a full 20 s history.
                     times = np.arange(60, len(y))
-                    return x[times - horizon], y[times], times
-                training = [select(item) for name, item in prepared.items() if name != heat and name != BAD_HEAT]
-                x = np.vstack([item[0] for item in training])
-                y = np.vstack([item[1] for item in training])
-                xt, yt, times = select(prepared[heat])
+                    return x[times - horizon], y[times], times, valid[times]
+                training = [select(item) for name, item in prepared.items() if name != heat]
+                x = np.vstack([inputs[valid] for inputs, _, _, valid in training])
+                y = np.vstack([targets[valid] for _, targets, _, valid in training])
+                xt, yt, times, valid = select(prepared[heat])
                 pred = fit_predict(x, y, xt, args.alpha)
                 for col, name in enumerate(("CO2", "CO")):
-                    valid = heat != BAD_HEAT
-                    err = pred[:, col] - yt[:, col]
-                    variance = np.var(yt[:, col])
+                    err = pred[valid, col] - yt[valid, col]
+                    variance = np.var(yt[valid, col]) if valid.any() else 0
                     metrics.append(dict(heat=heat, horizon_s=horizon * DT, model=mode,
-                        target=name, n=len(err), label_valid=valid,
-                        MAE=np.mean(np.abs(err)) if valid else "",
-                        RMSE=np.sqrt(np.mean(err ** 2)) if valid else "",
-                        R2=1 - np.mean(err ** 2) / variance if valid and variance > 0 else ""))
+                        target=name, n=len(err), label_valid=bool(valid.any()),
+                        MAE=np.mean(np.abs(err)) if valid.any() else "",
+                        RMSE=np.sqrt(np.mean(err ** 2)) if valid.any() else "",
+                        R2=1 - np.mean(err ** 2) / variance if variance > 0 else ""))
                     for i, t in enumerate(times):
                         predictions.append(dict(heat=heat, horizon_s=horizon * DT, model=mode,
                             target=name, target_time_s=t * DT, input_time_s=(t - horizon) * DT,
-                            observed=yt[i, col] if valid else "", predicted=pred[i, col], label_valid=valid))
+                            observed=yt[i, col] if valid[i] else "", predicted=pred[i, col], label_valid=bool(valid[i])))
     args.output.mkdir(parents=True, exist_ok=True)
     write_csv(args.output / "metrics.csv", metrics)
     write_csv(args.output / "predictions.csv", predictions)

@@ -2,7 +2,11 @@
 import argparse
 from pathlib import Path
 import numpy as np
-from run import BAD_HEAT, ROOT, features, fit_predict, read_heats, write_csv
+if __package__:
+    from .run import features, fit_predict, read_heats, write_csv
+else:
+    from run import features, fit_predict, read_heats, write_csv
+from q3.data import heat_exports
 
 ALPHAS = (1, 10, 100)
 
@@ -10,16 +14,17 @@ ALPHAS = (1, 10, 100)
 def evaluate(directory, output):
     targets = {}
     windows = {name: {} for name in ("current", "5s", "10s", "20s", "all")}
-    for heat, (data, wave) in read_heats(directory).items():
-        if heat == BAD_HEAT:
+    for heat, (data, wave, eligible) in read_heats(directory).items():
+        if not eligible[60:].any():
             continue
         bands, history, _ = features(data, wave)
-        targets[heat] = data[60:, -2:]
-        windows["current"][heat] = bands[40:-20]
-        windows["all"][heat] = history[40:-20]
+        rows = np.flatnonzero(eligible[60:]) + 60
+        targets[heat] = data[rows, -2:]
+        windows["current"][heat] = bands[rows - 20]
+        windows["all"][heat] = history[rows - 20]
         for index, name in enumerate(("5s", "10s", "20s")):
             start = 16 + 32 * index
-            windows[name][heat] = np.column_stack((bands, history[:, start:start + 32]))[40:-20]
+            windows[name][heat] = np.column_stack((bands, history[:, start:start + 32]))[rows - 20]
 
     def predict(inputs, training, test, alpha):
         return fit_predict(np.vstack([inputs[h] for h in training]),
@@ -58,7 +63,8 @@ def evaluate(directory, output):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", type=Path, default=ROOT / "B_audit")
+    parser.add_argument("--input", type=Path, help="Directory of heat NPZ files or legacy NPY cache")
     parser.add_argument("--output", type=Path, default=Path(__file__).resolve().parent / "results")
     args = parser.parse_args()
-    evaluate(args.input, args.output)
+    with heat_exports(args.input) as directory:
+        evaluate(directory, args.output)

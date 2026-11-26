@@ -18,7 +18,7 @@ def read_rows(path):
         return list(csv.DictReader(stream))
 
 
-def archived_comparisons():
+def comparison_values():
     summary = read_rows("q3/results/summary.csv")
     gains = read_rows("question3/results/spectral_gain_10s.csv")
     static, historical, process, fused = [], [], [], []
@@ -27,13 +27,49 @@ def archived_comparisons():
                     if row["target"] == gas and float(row["horizon_s"]) == 10}
         for dest, model in ((static, "spectrum"), (historical, "spectrum_history")):
             row = selected[model]
-            assert int(row["heats"]) == 9
+            assert int(row["heats"]) == 10
             dest.append(float(row["macro_mae"]))
         paired = [row for row in gains if row["gas"] == gas]
-        assert len({row["heat"] for row in paired}) == 9 and len(paired) == 9
+        assert len({row["heat"] for row in paired}) == 10 and len(paired) == 10
         process.append(np.mean([float(row["process_MAE"]) for row in paired]))
         fused.append(np.mean([float(row["with_spectra_MAE"]) for row in paired]))
     return (static, historical), (process, fused)
+
+
+def write_comparison_tables():
+    metrics = {(r["heat"], r["target"], r["model"]): r for r in read_rows("q3/results/validation.csv")
+               if float(r["horizon_s"]) == 10 and r["model"] in {"spectrum", "spectrum_history"}}
+    cases = []
+    for row in read_rows("question3/results/spectral_gain_10s.csv"):
+        heat, gas = row["heat"], row["gas"]
+        baseline, variant = (metrics[heat, gas, model] for model in ("spectrum", "spectrum_history"))
+        assert baseline["n_eval"] == variant["n_eval"] and int(baseline["n_eval"]) - int(row["n"]) == 40
+        for comparison, first_s, n, before, after in (
+            ("spectral_history", 10, baseline["n_eval"], baseline["mae"], variant["mae"]),
+            ("spectra_beyond_process", 30, row["n"], row["process_MAE"], row["with_spectra_MAE"]),
+        ):
+            before, after = float(before), float(after)
+            cases.append(dict(comparison=comparison, gas=gas, heat=heat, target_from_s=first_s,
+                              n=int(n), baseline_mae=before, augmented_mae=after, delta_mae=after - before))
+    summary = []
+    for comparison in ("spectral_history", "spectra_beyond_process"):
+        for gas in GASES:
+            group = [r for r in cases if (r["comparison"], r["gas"]) == (comparison, gas)]
+            assert len({r["heat"] for r in group}) == len(group) == 10
+            delta = np.array([r["delta_mae"] for r in group])
+            samples = np.random.default_rng(2026).integers(len(group), size=(10000, len(group)))
+            lower, upper = np.quantile(delta[samples].mean(axis=1), [.025, .975])
+            summary.append(dict(comparison=comparison, gas=gas, target_from_s=group[0]["target_from_s"],
+                                heats=len(group), n_total=sum(r["n"] for r in group),
+                                baseline_mae=np.mean([r["baseline_mae"] for r in group]),
+                                augmented_mae=np.mean([r["augmented_mae"] for r in group]),
+                                delta_mae=delta.mean(), improved_heats=int((delta < 0).sum()),
+                                bootstrap_lower_95=lower, bootstrap_upper_95=upper))
+    for filename, rows in (("paired_by_heat_10s.csv", cases), ("paired_summary_10s.csv", summary)):
+        with (ROOT / "question3" / "results" / filename).open("w", encoding="utf-8-sig", newline="") as stream:
+            writer = csv.DictWriter(stream, fieldnames=rows[0])
+            writer.writeheader()
+            writer.writerows(rows)
 
 
 def comparison_panel(ax, title, window, values, labels, precision, limit):
@@ -59,7 +95,8 @@ def comparison_panel(ax, title, window, values, labels, precision, limit):
 
 
 def main():
-    spectra_only, beyond_process = archived_comparisons()
+    write_comparison_tables()
+    spectra_only, beyond_process = comparison_values()
     fig, axes = plt.subplots(1, 2, figsize=(8.4, 4.3), layout="constrained")
     comparison_panel(axes[0], "(a) Spectrum only", 10, spectra_only,
                      ("Current spectrum", "Spectral history"), 2, 16)

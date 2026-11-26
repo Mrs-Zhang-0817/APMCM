@@ -1,30 +1,27 @@
-# 第三问预测基线
+# 第三问十炉复现
 
-运行 `python B_audit/extract.py` 生成 B_audit 下的逐炉 NPY 和 JSON，然后运行：
+主实验和补充实验读取同一批炉次。附件 1 使用主办方修订版本，原始 1,479 条烟气标签均通过基本筛查。时延来自 q1_q2/results/signed_lags_current.csv，每折只汇总训练炉候选。
 
-```text
-python question3/run.py --output question3/results
-```
+从仓库根目录执行：
 
-使用 `--input` 指向其他同格式的提取目录，`--alpha` 可修改固定岭回归惩罚。结果写入指定输出目录，已有审计结果不会被覆盖。重新运行会覆盖该输出目录中的同名文件。
+    python -m pip install -r paper/requirements.txt
+    python -m question3.reproduce
+    python paper/build_pdf.py apmcm26315849
 
-每炉统一插值到 341–1023 nm 的 1024 点，取 16 个宽波段。历史特征为当前值和过去 5、10、20 秒窗口均值及差值。流量是过去 5.5 秒累计氧差商。模型包括训练均值、当前光谱、历史光谱、过程变量及历史光谱加过程变量。所有模型按炉留出，标准化在训练炉拟合，固定 alpha=10，不进行调参。各实验在同一目标时间范围比较，分别用目标时刻和提前 10 秒的信息预测。
+第一条安装运行依赖。第二条从 work_b/Data 下的十份正式 XLSB 导出临时 NPZ。与正文相配套的数值、配对表和图写回各自的 results 目录。已有修订后的完整十炉 NPZ 可传入 --exports PATH。复现流程先用两套实际入口验证炉号、标签标记和附件 1 的核对点。
 
-6B03205 的烟气全零且与题面示例冲突，排除监督训练，输出盲预测并将标签和误差留空。其余九炉每次八炉训练、整炉测试。结果中的误差为原始记录尺度。过程变量模型仅作对照，光谱模型是题目重点。
+## 评价口径
 
-本框架基于原始观测与基础波段聚合，未接入第一问的异常修复或第二问的时延估计。固定 10 秒为预测提前量，并非估计的物理延迟。接入队友成果时，需保证光谱处理为因果形式，测试炉的标签不参与时延选择、标准化或模型选择。清洗后的烟气标签如依赖未来信息须单独声明与对照。后续如调参，应在每个外层训练炉内再次留炉选择，不能根据外层结果选择超参数并报告为无偏评估。
+- 主分析从目标时刻 10 s 起评分，同刻与提前 10 s 的模型使用相同的 13,389 个炉次–目标时刻。各炉单独计算 MAE 后十炉等权。
+- 配对检验从目标时刻 30 s 起评分，覆盖 12,989 个炉次–目标时刻。供氧历史模型及其加入光谱的版本使用相同的训练权重、岭惩罚和目标，过程模型逐条与本轮主实验预测核对。
+- 补充光谱基线按行等权训练。固定惩罚的历史对照、嵌套窗口选择以及触顶和时延敏感性实验均使用十炉。所有外层实验每折留一炉，内层只用剩余训练炉。
+- 历史冻结预测另用 a1006a1 的预测和新版标签评分，结果单列。原始九炉稿和结果可从 a1006a1 追溯。
 
-results/metrics.csv 包含逐炉指标，predictions.csv 包含各时刻预测。附件 1 不提供有效误差。请勿将本基线当作最终论文结果。
+## 结果
 
-## 合稿交接
-
-第三问草稿见 paper/第三问实验初稿.md。主文使用提前 10 秒、目标时刻从 30 秒开始的九炉等权 MAE。队友分支的部分表从 10 秒开始评价，合稿时使用同一口径。由仓库根目录依次运行以下命令可复现主要实验（先按上文生成逐炉缓存）。
-
-    python question3/run.py --output question3/results
-    python question3/diagnose.py
-    python question3/window_selection.py
-    python question3/spectral_gain.py
-    python question3/spectral_gain.py --clip-test
-    python question3/spectral_gain.py --lag-test
-
-与第一、二问作者核对最终代码和时延表的提交号。当前触顶插值属于专项敏感性实验，当前时延规则来自 e1222ad。正式合稿时只需重验发生变化的处理环节。
+- [两组比较的十炉宏 MAE、改善炉数和配对重采样区间](results/paired_summary_10s.csv)
+- [两组比较的逐炉差值](results/paired_by_heat_10s.csv)
+- [固定惩罚的补充模型](results/metrics.csv) · [嵌套窗口结果](results/window_selection.csv)
+- [触顶敏感性](results/clip_test_10s.csv) · [训练炉时延敏感性](results/lag_test_10s.csv)
+- [修订前附件 1 冻结预测的补评分](results/frozen_attachment1_10s.csv)
+- [英文合稿](../paper/manuscript-en.md) · [主分析逐炉指标](../q3/results/validation.csv)

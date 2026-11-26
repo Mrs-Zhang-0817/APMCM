@@ -31,14 +31,15 @@
 
 ## 第三问复现
 
-从仓库根目录用当前十份 XLSB 和对应的十炉时延表重跑。暂用独立输出目录，避免覆盖合稿所引用的历史九炉实验图表。
+从仓库根目录复现第三问的全部十炉分析、补充实验和配套图。默认使用当前十份 XLSB 和对应的十炉时延表。
 
-    python -m q3.predict --lags q1_q2/results/signed_lags_current.csv --output q3/results-revised
-    python -m q3.plot_results --results q3/results-revised
+    python -m pip install -r paper/requirements.txt
+    python -m question3.reproduce
+    python paper/build_pdf.py apmcm26315849
 
-已有炉次接口导出时，可加 `--exports PATH` 并确认使用新版 `6B03205.npz`。脚本仍只在训练炉内汇总候选时延。历史第三问使用的 `B_audit/signed_lags.csv` 和成绩保留供追溯。
+已有炉次接口导出时，可加 `--exports PATH` 并确认使用新版 `6B03205.npz`。脚本只在训练炉内汇总候选时延。数据与结果路径见 [第三问十炉复现](question3/README.md)。
 
-第三问的建模口径、逐炉结果和限制见 [第三问论文稿](q3/第三问论文稿.md)，三问的正文衔接见 [论文整合稿](docs/论文整合稿.md)。`summary.csv` 为分气体宏平均，`validation.csv` 为逐炉指标，`weights.csv` 为各折组合权重及时延，`contrasts.csv` 为配对误差比较，`predictions.csv` 为逐时刻预测。
+当前正文与附录见 [英文合稿](paper/manuscript-en.md)。`q3/results/summary.csv` 为分气体宏平均，`validation.csv` 为逐炉指标，`weights.csv` 为各折组合权重及时延，`contrasts.csv` 为配对误差比较，`predictions.csv` 为逐时刻预测。
 
 ## 共同约定
 
