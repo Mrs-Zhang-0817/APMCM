@@ -1,0 +1,2 @@
+﻿heat,signal,time_s,original,replacement,reason
+6C02057,oxygen_reconstructed_curve,376.0,3448.66,3417.1726490124956,maximum_deviation_from_measurement
