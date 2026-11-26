@@ -4,9 +4,9 @@
 
 Flame spectra and flue-gas measurements describe the same steelmaking process on different time scales. We used records from ten converter heats to reconstruct the observed signals, examine the delay between oxygen supply and gas response, and test whether spectra could forecast gas measurements in a previously unseen heat.
 
-We screened isolated spectral observations against their neighbours in time and wavelength and reconstructed the surface on each heat's native wavelength grid. Across 10,000 withheld interior observations that passed quality screening, the pooled mean absolute error (MAE) was 100.05 W/cm² and the root mean squared error was 153.22 W/cm². For offline process analysis, we reconstructed cumulative oxygen consumption with a monotone piecewise cubic curve and obtained oxygen flow from its derivative. Replacing the original flow estimate shifted the location of 80 of 90 candidate correlation peaks across heat, gas and process groups. The inferred delays therefore depend on the flow reconstruction; the available records do not independently identify gas transport time.
+We screened isolated spectral observations against their neighbours in time and wavelength and reconstructed the surface on each heat's native wavelength grid. Across 10,000 withheld interior observations that passed quality screening, the pooled mean absolute error (MAE) was 100.05 W/cm² and the root mean squared error was 153.22 W/cm². For offline process analysis, we reconstructed cumulative oxygen consumption with a monotone piecewise cubic curve and obtained oxygen flow from its derivative. Replacing the original flow estimate shifted the location of 90 of 100 candidate correlation peaks across heat, gas and process groups. The inferred delays depend on the flow reconstruction. The available records do not independently identify gas transport time.
 
-For prediction, we used only measurements available when issuing each forecast. We produced predictions for all ten heats and evaluated nine by leave-one-heat-out validation. One heat had two all-zero gas records that disagreed with the problem's example and was retained for prediction without quantitative scoring. For forecasts issued 10 seconds in advance and scored from 10 seconds after the start of each heat, adding spectral history reduced the heat-averaged CO MAE from 13.62 to 12.48 m³/s. The corresponding CO₂ error rose from 3.99 to 4.04 m³/s. In a paired comparison scored from 30 seconds, a model using oxygen-supply and process history achieved MAEs of 4.935 m³/s for CO and 2.685 m³/s for CO₂. Adding spectral features raised these errors to 5.408 and 3.053 m³/s. Thus spectral history improved CO forecasts when only spectra were available, while oxygen-supply history provided the stronger baseline when process measurements were available.
+The historical forecasting experiment preceded the organizer's revision of Attachment 1. It used only measurements available when issuing each forecast and scored nine heats by leave-one-heat-out validation. The revised gas readings for 6B03205 are included in the process analysis. For forecasts issued 10 seconds in advance and scored from 10 seconds after the start of each heat, adding spectral history reduced the heat-averaged CO MAE from 13.62 to 12.48 m³/s. The corresponding CO₂ error rose from 3.99 to 4.04 m³/s. In a paired comparison scored from 30 seconds, a model using oxygen-supply and process history achieved MAEs of 4.935 m³/s for CO and 2.685 m³/s for CO₂. Adding spectral features raised these errors to 5.408 and 3.053 m³/s. Thus spectral history improved CO forecasts when only spectra were available, while oxygen-supply history provided the stronger baseline when process measurements were available.
 
 **Keywords:** converter steelmaking, spectral reconstruction, flue gas, time delay, leave-one-heat-out validation
 
@@ -26,7 +26,7 @@ A flame spectrum is available at the converter mouth before the corresponding fl
 
 Each attachment supplies a sequence number, 2,047 spectral channels, cumulative oxygen volume and two gas measurements. We assign time zero to the first sample. The four B-series heats cover 340.535–1027.963 nm and the six C-series heats cover 339.390–1023.303 nm. We retain the native axes for reconstruction and use common physical wavelengths for prediction. The gas columns are labelled concentration in the files; we follow the problem's definition of instantaneous volumetric flow in m³/s. Integrating these values gives volume in m³.
 
-Heat 6B03205 contains 1,479 consecutive pairs of zero gas readings. At sequence 500, its cumulative oxygen volume (998.97 m³) and displayed spectral values agree with the problem example, but the recorded gas readings differ. We retain the original records, reconstruct its spectrum and issue blind forecasts. Only the other nine heats contribute gas errors and delay estimates. Heat 6C02057 spans 387 s under the nominal sampling interval. Its timestamps cannot be independently verified, so it retains its original duration throughout the analysis.
+The organizer revised the gas readings for heat 6B03205. All 1,479 revised time points pass the label-quality screen. The sequence, wavelengths, spectral intensities and cumulative oxygen readings match the original file exactly. The original file is archived. Section 3 uses the revised ten-heat dataset. Section 4 and its forecast tables and figures report the historical experiment with nine scored heats, conducted before the revision. Heat 6C02057 spans 387 s under the nominal sampling interval. Its timestamps cannot be independently verified, so it retains its original duration throughout the analysis.
 
 ## 2. Reconstructing the flame spectrum
 
@@ -48,13 +48,13 @@ We screened oxygen and gas records for negative or nonfinite values. A gas impul
 
 We anchored a monotone piecewise cubic Hermite curve to cumulative oxygen readings at 5.5 s intervals and both endpoints. Its derivative gives the offline lance flow estimate. In 6C02057 the maximum raw single-step flow was 109.82 m³/s; the reconstructed peak on the 0.1 s display grid was 19.78 m³/s. Integrating the quadratic derivative over each segment recovered the observed end-to-start oxygen change to within 4.55 × 10⁻¹³ m³ across heats. Trapezoidal integration on the display grid gave a maximum absolute discrepancy of 0.0398 m³. These checks establish volume closure; independent instantaneous flow measurements were unavailable.
 
-We joined successive gas observations linearly and accumulated their trapezoidal areas from zero at the first observation. In 6B03270 the correlations of cumulative oxygen with instantaneous CO₂ and CO were −0.020 and 0.930, respectively. With cumulative CO₂ and CO volumes they were 0.993 and 0.967. Shared growth over time contributes to the latter correlations, limiting their use as evidence of reaction efficiency.
+We joined successive gas observations linearly and accumulated their trapezoidal areas from zero at the first observation. The revised 6B03205 record yields cumulative volumes of 9,350.400 m³ of CO₂ and 24,869.075 m³ of CO. The respective ten-heat medians were 9,746.095 m³ and 20,341.269 m³. In 6B03270 the correlations of cumulative oxygen with instantaneous CO₂ and CO were −0.020 and 0.930, respectively. With cumulative CO₂ and CO volumes they were 0.993 and 0.967. Shared growth over time contributes to the latter correlations, limiting their use as evidence of reaction efficiency.
 
 ![Measured and reconstructed oxygen supply near the largest cumulative-volume deviation in heat 6C02057](../q1_q2/results/oxygen_window.png)
 
 *Figure 2. Oxygen-supply reconstruction in heat 6C02057 near 376 s. The upper panel compares recorded and reconstructed cumulative oxygen volume (m³). The lower panel compares raw interval differences and the derivative of the fitted curve (m³/s). Both panels use the same time window. The ten full six-panel figures are in Appendix 6.3.*
 
-For candidate delay estimation we compared 5 s changes in smoothed flow with later gas changes, scanning 0–40 s in 0.5 s steps and maximizing the absolute Pearson correlation. We grouped observations using source-time flow terciles and examined process halves and alternative smoothing windows. With the original trailing flow estimate, the high-flow CO₂ delay was shorter in seven heats and longer in two. For CO it was shorter in three, tied in one and longer in five. Repeating the scan using the reconstructed flow moved 80 of 90 candidate peaks. High-flow delays then became shorter in eight heats for CO₂ and one for CO. The direction of the association depends on the gas, and the inferred number of seconds depends strongly on signal processing.
+For candidate delay estimation we compared 5 s changes in smoothed flow with later gas changes, scanning 0–40 s in 0.5 s steps and maximizing the absolute Pearson correlation. We grouped observations using source-time flow terciles and examined process halves and alternative smoothing windows. Across the ten heats, the trailing-flow estimate gave shorter high-flow delays in eight heats for CO₂ and three for CO. The CO delays tied in one heat. Replacing trailing flow with reconstructed flow shifted 90 of 100 candidate peaks. The reconstructed-flow estimates gave shorter high-flow delays in nine heats for CO₂ and one for CO, with two CO ties. For revised 6B03205 the low- and high-flow CO₂ estimates were 40.0 and 2.5 s, and the CO estimates were 0.0 and 7.5 s (Table A2). The 40.0 s and 0.0 s estimates reach scan boundaries. The direction of the association depends on the gas, and the inferred offsets depend strongly on signal processing.
 
 ## 4. Predicting gas readings in an unseen heat
 
@@ -111,6 +111,7 @@ Table A2 gives candidate delays (seconds) for the low and high flow groups using
 
 | Heat | CO₂ low | CO₂ high | CO low | CO high |
 |---|---:|---:|---:|---:|
+| 6B03205 | 40.0 | 2.5 | 0.0 | 7.5 |
 | 6B03206 | 40.0 | 29.5 | 1.5 | 29.5 |
 | 6B03270 | 40.0 | 0.0 | 0.0 | 40.0 |
 | 6B03271 | 40.0 | 39.5 | 31.5 | 36.0 |
@@ -205,7 +206,7 @@ Figures A11–A20 show lance flow, cumulative oxygen volume, CO₂ and CO flows,
 
 ![Six reconstructed process signals for heat 6B03205](../q1_q2/results/process/6B03205.png)
 
-*Figure A11. Reconstructed process curves for heat 6B03205. Both gas records are all zero and their label validity remains unconfirmed.*
+*Figure A11. Reconstructed process curves for heat 6B03205 using the organizer's revised CO₂ and CO measurements.*
 
 ![Six reconstructed process signals for heat 6B03206](../q1_q2/results/process/6B03206.png)
 
@@ -247,4 +248,4 @@ Figures A11–A20 show lance flow, cumulative oxygen volume, CO₂ and CO flows,
 
 ![Analyzer readings and 10 s ahead joint-ensemble forecasts for all ten held-out heats](../q3/results/predictions_10s.png)
 
-*Figure A21. Analyzer readings and 10 s ahead joint-ensemble forecasts. The horizontal axis is the analyzer target time, beginning at 10 s, and the vertical axis is gas flow (m³/s). Each column uses a common vertical scale across heats. Heat 6B03205 shows forecasts only because its gas labels could not be verified. Table A4 reports scores for the nine eligible heats.*
+*Figure A21. Historical analyzer readings and 10 s ahead joint-ensemble forecasts, before the revision of Attachment 1. The horizontal axis is the analyzer target time, beginning at 10 s, and the vertical axis is gas flow (m³/s). Each column uses a common vertical scale across heats. The historical experiment produced forecasts only for 6B03205. Table A4 reports scores for the nine heats with eligible labels at the time.*

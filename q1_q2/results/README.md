@@ -13,7 +13,7 @@
 | 9 | 6C02107 | [光谱](spectra/6C02107.png) | [过程](process/6C02107.png) |
 | 10 | 6C02108 | [光谱](spectra/6C02108.png) | [过程](process/6C02108.png) |
 
-附件 1 的四个烟气相关子图以英文标注原始记录全零、标签有效性待确认。附件 5 按实际 387 s 绘制。
+附件 1 的六联图使用主办方修订后的烟气记录。其序号、波长、光强和累计耗氧逐项相同，第一问沿用原图和验证结果。附件 5 按实际 387 s 绘制。
 
 ## 光谱
 
@@ -28,4 +28,5 @@
 - [累计氧和流量的代表窗口](oxygen_window.png) · [窗口数值](process_examples.csv)
 - [积分闭合、排放总量和质量标记](process_balance.csv) · [原始节点修复记录](process_repairs.csv)
 - [累计氧关联的敏感性](oxygen_association_sensitivity.csv) · [流量时延的敏感性](lag_sensitivity.csv)
-- [存档的分流量与分阶段时延](../../B_audit/lags.csv) · [第三问使用的双向候选表](../../B_audit/signed_lags.csv)
+- [当前十炉分流量与分阶段时延](lags_current.csv) · [当前十炉双向候选时延](signed_lags_current.csv) · [十炉跨炉汇总](process_cross_heat_summary.csv)
+- [历史九炉分流量与分阶段候选](../../B_audit/lags.csv) · [历史第三问使用的双向候选](../../B_audit/signed_lags.csv)

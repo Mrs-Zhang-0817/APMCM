@@ -2,16 +2,13 @@
 from pathlib import Path
 import numpy as np,json,csv
 from collections import defaultdict
+from lag_scan import corr, forward_lags, smooth
 out=Path(__file__).resolve().parent
 tables=defaultdict(list)
 def save():
     for name,rows in tables.items():
         with (out/(name+'.csv')).open('w',encoding='utf-8-sig',newline='') as f:
             w=csv.DictWriter(f,fieldnames=rows[0]); w.writeheader(); w.writerows(rows)
-def smooth(x,w):
-    return np.convolve(np.pad(x,(w-1,0),mode='edge'),np.ones(w)/w,'valid')
-def corr(x,y):
-    return np.corrcoef(x,y)[0,1] if min(x.std(),y.std())>1e-8 else np.nan
 def desc(h,name,x):
     q=np.quantile(x,[0,.05,.5,.95,1])
     tables['distribution'].append(dict(heat=h,field=name,minimum=q[0],p05=q[1],median=q[2],p95=q[3],maximum=q[4],mean=x.mean(),sd=x.std(),first=x.flat[0],last=x.flat[-1],peak_index=x.argmax()+1))
@@ -36,22 +33,7 @@ for file in sorted(out.glob('6*.npy')):
     for k,x in [('O2cum',o),('flow_raw',d),('flow_5.5s',q),('CO2',c),('CO',g),('brightness',b),('spectral_cells',s)]:desc(h,k,x)
     for k,x in [('CO2',c),('CO',g),('CO2_integral',integrate(c)),('CO_integral',integrate(g)),('brightness',b)]:
         tables['association'].append(dict(heat=h,target=k,r_oxygen=corr(o,x),r_flow=corr(q,x),r_brightness=corr(b,x)))
-    for w in [5,11,31]:
-        flow=smooth(d,w); level=smooth(b,w)
-        for target,gas in [('CO2',c),('CO',g)]:
-            y=smooth(gas,w)
-            for source,signal in [('flow',flow),('brightness',level)]:
-                for transform in ['level','change']:
-                    x=signal if transform=='level' else signal-np.roll(signal,10)
-                    z=y if transform=='level' else y-np.roll(y,10)
-                    i=np.arange(w+10,n-80)
-                    for group,mask in [('all',i>=0),('first',i<n/2),('second',i>=n/2),('low',flow[i]<=np.quantile(flow[i],.33)),('high',flow[i]>=np.quantile(flow[i],.67))]:
-                        j=i[mask]
-                        if len(j)<40:continue
-                        rs=np.array([corr(x[j],z[j+k]) for k in range(81)])
-                        if np.isnan(rs).all():continue
-                        k=np.nanargmax(abs(rs))
-                        tables['lags'].append(dict(heat=h,window_s=w*.5,target=target,source=source,transform=transform,group=group,n=len(j),lag_s=k*.5,r=rs[k],r0=rs[0],flow_median=np.median(flow[j])))
+    tables['lags'].extend(forward_lags(h,o,c,g,b))
     curves.append((h,t,[o,q,c,g,integrate(c),integrate(g),b]))
 # PCA of 16 band means, descriptive pooled covariance
 F=np.vstack([v[0] for v in sets.values()]); val,vec=np.linalg.eigh(np.cov(F.T)); frac=val[::-1]/val.sum()

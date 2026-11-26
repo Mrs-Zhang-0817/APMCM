@@ -4,6 +4,9 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from B_audit.lag_scan import corr as correlation
+from B_audit.lag_scan import five_second_change, flow_groups, peak, smooth
+
 
 @dataclass
 class Process:
@@ -120,43 +123,25 @@ def reconstruct(time, oxygen, co2, co):
                    bool(np.all(co2 == 0) and np.all(co == 0)))
 
 
-def correlation(left, right):
-    return np.corrcoef(left, right)[0, 1] if min(left.std(), right.std()) > 1e-8 else np.nan
-
-
-def backward_mean(values):
-    return np.convolve(np.pad(values, (10, 0), mode="edge"), np.ones(11) / 11, "valid")
-
-
-def five_second_change(values):
-    return values - np.roll(values, 10)
-
-
 def lag_sensitivity(process, recorded):
     """Change the archived inputs while preserving the archived scan settings."""
-    oxygen, _, _ = process.raw
     display_flow = process.flow_at_observations
-    i = np.arange(21, len(oxygen) - 80)
+    groups = flow_groups(display_flow, np.arange(21, len(display_flow) - 80))
     rows = []
     for target, gas in zip(("CO2", "CO"), process.knots[1:]):
-        y = five_second_change(backward_mean(gas))
+        y = five_second_change(smooth(gas, 11))
         x = five_second_change(display_flow)
-        groups = {
-            "all": i, "first": i[i < len(oxygen) / 2], "second": i[i >= len(oxygen) / 2],
-            "low": i[display_flow[i] <= np.quantile(display_flow[i], .33)],
-            "high": i[display_flow[i] >= np.quantile(display_flow[i], .67)],
-        }
         for group, j in groups.items():
-            previous = recorded[target, group]
-            peak = np.array([correlation(x[j], y[j + k]) for k in range(81)])
-            if np.isnan(peak).all():
+            previous = recorded.get((target, group))
+            result = peak(x, y, j, range(81))
+            if previous is None or result is None:
                 continue
-            k = np.nanargmax(np.abs(peak))
-            rows.append(dict(target=target, group=group, audit_n=int(previous["n"]), audit_lag_s=float(previous["lag_s"]),
-                             audit_r=float(previous["r"]), reconstructed_n=len(j), reconstructed_lag_s=k / 2,
-                             reconstructed_r=peak[k], reconstructed_r0=peak[0],
+            lag, r = result
+            rows.append(dict(target=target, group=group, audit_n=previous["n"], audit_lag_s=previous["lag_s"],
+                             audit_r=previous["r"], reconstructed_n=len(j), reconstructed_lag_s=lag,
+                             reconstructed_r=r, reconstructed_r0=correlation(x[j], y[j]),
                              reconstructed_flow_median=np.median(display_flow[j]),
-                             candidate_shift_s=k / 2 - float(previous["lag_s"])))
+                             candidate_shift_s=lag - previous["lag_s"]))
     return rows
 
 

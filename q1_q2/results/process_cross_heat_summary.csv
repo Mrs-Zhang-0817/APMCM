@@ -1,0 +1,3 @@
+﻿gas,labelled_heats,median_volume_m3,min_volume_m3,max_volume_m3,median_r_oxygen_vs_flow,median_r_oxygen_vs_cumulative_volume,audit_high_shorter,audit_high_equal,audit_high_longer,reconstructed_high_shorter,reconstructed_high_equal,reconstructed_high_longer,candidate_peaks,shifted_peaks
+CO2,10,9746.095000000001,4843.069999999995,10989.260000000002,0.09924946571340663,0.99567035108613,8,0,2,9,0,1,50,43
+CO,10,20341.268750000003,11029.405,24869.074999999943,0.8767014110783402,0.9731516614343616,3,1,6,1,2,7,50,47

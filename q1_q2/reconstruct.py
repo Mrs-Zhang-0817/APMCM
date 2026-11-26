@@ -8,6 +8,7 @@ from tempfile import TemporaryDirectory
 
 import numpy as np
 
+from B_audit.lag_scan import forward_lags, signed_lags
 from q1_q2.formal_figures import gas_window, oxygen_window, process_panels, spectral_surface, spectral_windows
 from q1_q2.process_curves import lag_sensitivity, oxygen_associations, reconstruct
 from q1_q2.spectral import HOLDOUT_SEED, holdout_mask, repair_grid, supported_peak, surface_grid
@@ -31,12 +32,6 @@ def heat_exports(directory):
             source = ROOT / "work_b" / "Data" / f"Attachment {i}. Heat No. {heat}.xlsb"
             export(source, directory / f"{heat}.npz", 1)
         yield directory
-
-
-def read_audit_lags():
-    with (ROOT / "B_audit" / "lags.csv").open(encoding="utf-8-sig", newline="") as stream:
-        return {(row["heat"], row["target"], row["group"]): row for row in csv.DictReader(stream)
-                if (float(row["window_s"]), row["source"], row["transform"]) == (5.5, "flow", "change")}
 
 
 def write_table(path, rows, columns=None):
@@ -74,15 +69,40 @@ def spectral_example(kind, example):
                 earlier=raw[i-1, j], later=raw[i+1, j], shorter_wave=raw[i, j-1], longer_wave=raw[i, j+1])
 
 
+def cross_heat_summary(balances, associations, lag_cases):
+    labelled = [row for row in balances if not row["zero_gas_record"]]
+    rows = []
+    for gas in ("CO2", "CO"):
+        volumes = [row[f"final_{gas.lower()}_m3"] for row in labelled]
+        median_r = {name: np.median([row["audit_r"] for row in associations
+                                     if row["target"] == name and np.isfinite(row["audit_r"])])
+                    for name in (gas, f"{gas}_integral")}
+        cases = [row for row in lag_cases if row["target"] == gas]
+        by_heat_group = {(row["heat"], row["group"]): row for row in cases}
+        counts = {}
+        for label, column in (("audit", "audit_lag_s"), ("reconstructed", "reconstructed_lag_s")):
+            differences = [row[column] - by_heat_group[heat, "low"][column]
+                           for (heat, group), row in by_heat_group.items()
+                           if group == "high" and (heat, "low") in by_heat_group]
+            for outcome, sign in (("shorter", -1), ("equal", 0), ("longer", 1)):
+                counts[f"{label}_high_{outcome}"] = int(np.sum(np.sign(differences) == sign))
+        rows.append(dict(gas=gas, labelled_heats=len(labelled), median_volume_m3=np.median(volumes),
+                         min_volume_m3=min(volumes), max_volume_m3=max(volumes),
+                         median_r_oxygen_vs_flow=median_r[gas],
+                         median_r_oxygen_vs_cumulative_volume=median_r[f"{gas}_integral"], **counts,
+                         candidate_peaks=len(cases), shifted_peaks=sum(row["candidate_shift_s"] != 0 for row in cases)))
+    return rows
+
+
 def run(exports, output, reconstruction_path):
     surface_dir, process_dir = output / "spectra", output / "process"
     for directory in (surface_dir, process_dir, reconstruction_path):
         if directory is not None:
             directory.mkdir(parents=True, exist_ok=True)
     rng = np.random.default_rng(HOLDOUT_SEED)
-    audit = read_audit_lags()
     errors, pooled, holdouts, repairs, grids = [], [], [], [], []
     balances, process_edits, lag_cases, associations = [], [], [], []
+    all_forward, all_signed = [], []
     spike_example, peak_example, process_example, gas_example = None, None, None, None
 
     for heat in HEATS:
@@ -134,8 +154,11 @@ def run(exports, output, reconstruction_path):
         process_edits.extend(dict(heat=heat, **row) for row in process.changes)
         associations.extend(dict(heat=heat, **row) for row in oxygen_associations(process))
         if not process.all_zero:
-            recorded = {(target, group): audit[heat, target, group] for target in ("CO2", "CO")
-                        for group in ("all", "first", "second", "low", "high")}
+            candidates = list(forward_lags(heat, *process.raw, raw.mean(axis=1)))
+            all_forward.extend(candidates)
+            all_signed.extend(signed_lags(heat, *process.raw))
+            recorded = {(row["target"], row["group"]): row for row in candidates
+                        if (row["window_s"], row["source"], row["transform"]) == (5.5, "flow", "change")}
             lag_cases.extend(dict(heat=heat, **row) for row in lag_sensitivity(process, recorded))
         j = np.argmax(np.abs(process.dense[1][::5] - process.raw[0]))
         delta = process.dense[1][5*j] - process.raw[0][j]
@@ -164,6 +187,8 @@ def run(exports, output, reconstruction_path):
         ("spectral_holdouts", holdouts), ("spectral_repairs", repairs), ("spectral_grids", grids),
         ("spectral_examples", examples), ("process_balance", balances), ("process_examples", process_notes),
         ("oxygen_association_sensitivity", associations), ("lag_sensitivity", lag_cases),
+        ("lags_current", all_forward), ("signed_lags_current", all_signed),
+        ("process_cross_heat_summary", cross_heat_summary(balances, associations, lag_cases)),
     ):
         write_table(output / f"{name}.csv", rows)
     write_table(output / "process_repairs.csv", process_edits,
